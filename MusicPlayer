@@ -1,0 +1,195 @@
+# Importing Required Modules & libraries
+from tkinter import *
+from tkinter import ttk  # TODO:WAS:from tkinter import ttk
+import pygame
+import os
+
+DEBUG = True
+
+
+class MusicPlayer:
+    """One object of this class represents a tkinter GUI application that plays
+    audio files."""
+
+    def __init__(self, root):
+        """Creates a tkinter GUI application that plays audio files."""
+        self.root = root
+        self.root.title("Music Player")
+        self.root.geometry("1000x200+200+200")
+        pygame.init()
+        pygame.mixer.init()
+        # DONE: Make the self.track and self.status StringVar object
+        # Setting the self.track to stringvar
+        self.track = StringVar()
+        # Setting setting the self.status to stringvar
+        self.status = StringVar()
+        # Creating trackframe for songtrack label & trackstatus label
+        trackframe = LabelFrame(self.root, text="Song Track", relief=GROOVE)
+        trackframe.place(x=0, y=0, width=600, height=100)
+        # DONE Below make the self.track the textvariable for songtrack and
+        # the self.status the textvariable for trackstatus
+        songtrack = Label(trackframe, textvariable=self.track
+                          ).grid(row=0, column=0, padx=10, pady=5)
+
+        trackstatus = Label(trackframe, textvariable=self.status).grid(
+            row=0, column=1, padx=10, pady=5)
+
+        # Creating buttonframe
+        buttonframe = LabelFrame(
+            self.root, text="Control Panel", relief=GROOVE)
+        # Inserting song control Buttons
+        # TODO: This line was missing, why was it removed?
+        buttonframe.place(x=0, y=100, width=600, height=100)
+        Button(buttonframe, text="Play", command=self.playsong).grid(
+            row=0, column=0, padx=10, pady=5)
+        Button(buttonframe, text="Pause", command=self.pausesong
+               ).grid(row=0, column=1, padx=10, pady=5)
+        Button(buttonframe, text="Unpause", command=self.unpausesong
+               ).grid(row=0, column=2, padx=10, pady=5)
+        Button(buttonframe, text="Stop", command=self.stopsong).grid(
+            row=0, column=3, padx=10, pady=5)
+        Button(buttonframe, text="Refresh From Folder",
+               command=self.refresh).grid(row=1, column=3, padx=10, pady=5)
+
+        # Creating songsframe
+        songsframe = LabelFrame(self.root, text="Song Playlist", relief=GROOVE)
+        songsframe.place(x=600, y=0, width=400, height=150)
+        scrol_y = Scrollbar(songsframe, orient=VERTICAL)
+        self.playlist = Listbox(songsframe, yscrollcommand=scrol_y.set,
+                                selectbackground="gold",
+                                selectmode=SINGLE, relief=GROOVE)
+        # Applying Scrollbar to playlist Listbox
+        scrol_y.pack(side=RIGHT, fill=Y)
+        scrol_y.config(command=self.playlist.yview)
+        self.playlist.pack(fill=BOTH)  # ASK BABA ABOUT FILL OF WHAT?
+        searchframe = LabelFrame(self.root, text="Search", relief=GROOVE)
+        # Adding playlist search controls
+        searchframe.place(x=600, y=145, width=400, height=50)
+        search_input = Entry(searchframe, width=30)
+        # DONE: Make the self.inputVar StringVar object
+        self.inputVar = StringVar()
+        # DONE: Below make the self.inputVar the textvariable for search_input
+        search_input.config(textvariable=self.inputVar)
+        search_input.grid(row=1, column=1, padx=1, pady=1)
+        Button(searchframe, text="Search",
+               command=self.search).grid(row=1, column=2, padx=1, pady=1)
+        # Changing directory for fetching songs
+        path = os.getcwd()
+        music = "/Users/bespectacled-brainy-tech-kitten/Music/music"
+        dir = "music"
+        music = os.path.join(path, dir, music)
+        print("Your new bopping tunes directory is: " + music)
+        
+        os.chdir(music)
+
+        # Inserting songs into playlist
+        self.refresh()
+
+    def search(self):
+        """
+        TODO: Explain below in this docstring what an algorithm is.
+        Then explain how your search algorithm is implemented in this method.
+        Use at least two full sentences of U.S. English.
+
+        An algorithm is a series of steps or rules followed to solve a problem
+        or to complete a basic or advanced task. As algorithms are math and 
+        logic based, they can be used in many languages. And are easily passed
+        from developer to developer in form of API or encoded keys, Bridging the
+        gap between the developer and the user.
+
+        This algorithm retrieves the playlist, then empties it in
+        readiness for the search function. I then set query to the 
+        inputVar, and I shrunk the alpha characters, and took away all
+        of the un-wanted white spaces. Finally in the the "Try/For" loop I
+        said for every variable *set to filename* in templist. we asked the 
+        app to check for every query in every filename to shrink all a. char. and place
+        them all in the self.playlist using the insert function staring at the end 
+        we are going insert the variable filename. and we are going to catch all exceptions
+        as err and set them to the players status. 
+
+
+
+        DONE: Remove from the self.playlist ListBox any filename that does not
+        partially match the characters from the self.inputVar of the
+        search_input Entry widget. Catch any possible exceptions.
+        """
+        templist = self.playlist.get(0, END)
+        self.playlist.delete(0, END)
+        query = self.inputVar.get().casefold().strip()
+         
+        try:
+            for filename in templist:
+                if query in filename.casefold():
+                    self.playlist.insert(END, filename)
+        except Exception as err:
+            self.status.set(err)
+        
+        
+    def playsong(self):
+        """
+        DONE:
+        Displays selected song and its playing status and plays the song.
+        """
+        songs = self.playlist.get(ACTIVE)
+        self.status.set("-Playing")
+        self.track.set(songs)
+        pygame.mixer.music.load(songs)
+        pygame.mixer.music.play()
+
+    def stopsong(self):
+        """DONE: Displays stopped status and stops the song."""
+        self.status.set("-Stopped")
+        pygame.mixer.music.stop()
+
+    def pausesong(self):
+        """DONE: Displays the paused status and pauses the song."""
+        self.status.set("Paused")
+        pygame.mixer.music.pause()
+
+    def unpausesong(self):
+        """DONE: Displays the playing status and unpauses the song."""
+        self.status.set("-Playing")
+        pygame.mixer.music.unpause()
+
+    def refresh(self):
+        """
+        DONE:
+        Clears the current playlist and fills it with all valid sound files
+        from the music folder. All exception messages are appended to the
+        status in their default string form.
+        See the .pdf reference files for how to insert items into a tkinter
+        Listbox.
+        """
+        # DONE: First clear the search_input Entry widget via self.inputVar
+        self.playlist.delete(0, 'end')
+
+        # DONE: Ignore files whose names that start with "."
+        # and those that are not .mp3, .ogg, or .wav files
+        file_type = ('.mp3', '.ogg', '.wav')
+
+        sound_track = os.listdir()
+
+        try:
+            for filename in sound_track:
+                if filename[0] != ".":
+                    if filename.endswith(file_type):
+                        self.playlist.insert('end', filename)
+        except Exception as err:
+            self.status.set("Error" + str(err))
+        print(self.playlist)
+
+       # TODO: Make sure you format your code to the autopep8 standard
+
+
+def main():
+    """Create main window and start a MusicPlayer application on it."""
+    # Creating TK root window
+    root = Tk()
+    # Passing root to the MusicPlayer constructor
+    app = MusicPlayer(root)
+    # Start the main GUI loop
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
